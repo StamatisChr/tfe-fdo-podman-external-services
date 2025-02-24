@@ -2,7 +2,7 @@
 
 ## What is this guide about?
 
-This guide is to have Terraform Enterprise running with Podman.
+This guide is to have Terraform Enterprise running with Podman on external mode.
 
 ## Prerequisites 
 
