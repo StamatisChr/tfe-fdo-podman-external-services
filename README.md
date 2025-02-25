@@ -16,7 +16,7 @@ This guide is to have Terraform Enterprise running with Podman on external mode.
 
 - A DNS zone hosted on AWS Route53
 
-- Terraform Enterprise Podman license
+- Terraform Enterprise FDO license
 
 - Git installed and configured on your computer
 
