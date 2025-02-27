@@ -74,6 +74,7 @@ tfe_version_image             = "<tfe_version>"            # desired TFE version
 tfe_database_user             = "<type_a_username>"        # TFE database user for the external database
 tfe_database_name             = "<type_a_database_name>"   # The database name that TFE will use
 tfe_database_password         = "<type_a_password>"        # The password for the external TFE database
+admin_password                = "<type_a_passwor>          # The password of the TFE Admin user
 ```
 
 
@@ -113,24 +114,54 @@ start_ssm_session = "aws ssm start-session --target instance-id i-09254c251eb439
 tfe-podman-fqdn = "tfe-ext-eel.stamatios-chrysinas.sbx.hashidemos.io"
 ```
 
-Wait about 7-8 minutes for Terraform Enterprise to initialize.
-
-Use the command from output start_ssm_session to connect to TFE EC2 instance.
-Example:
+go to the new post-deployment directory
 ```
-aws ssm start-session --target instance-id i-09254c2bbbb439362 --region eu-west-1
+cd post-deployment
 ```
 
-Follow the instructions for Podman to retrieve initial admin creation token:
-https://developer.hashicorp.com/terraform/enterprise/deploy/initial-admin-user#retrieve-initial-admin-creation-token
+run the script that will create your first user, organization and workspace:
+```
+bash setup_tfe.sh
+```
 
-and create initial admin user:
-https://developer.hashicorp.com/terraform/enterprise/deploy/initial-admin-user#create-initial-admin-user
+example output:
+```
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+Waiting TFE to start...
+TFE is ready to accept connections
+Retrieving initial admin user token
+Initial admin user token retrieved
+7f8d88f8ee9211d62f8fc9e165d05cdxxxxxxxxxxx
+Creating admin user..
+Admin user created
+Received admin user api token: 
+z9WKiNUJs7C69A.atlasv1.7UAYywlOvrrzwzgGysDblQ0Z9n1pgxxxxxxxxxx
+Creating resources...
+visit tfe ui:
+https://tfe-ext-dinosaur.stamatios-chrysinas.sbx.hashidemos.io
+User credentials can be found in payload.json file
+```
 
-Visit the official documentation to learn more about Terraform Enterprise application administration:
-https://developer.hashicorp.com/terraform/enterprise/application-administration/general
+Visit TFE fqdn (mentioned in the script output).
+
+Login credentials can be found in the payload.json:
+```
+cat payload.json
+```
+
 
 ## Clean up
+
+Go one direectory back from post-deployment:
+```
+cd ..
+```
 
 To delete all the resources, run:
 ```
@@ -140,7 +171,12 @@ type yes when prompted.
 
 Wait for the resource deletion.
 ```
-Destroy complete! Resources: 18 destroyed.
+Destroy complete! Resources: 21 destroyed.
+```
+
+Remove the post-deployment directory:
+```
+rm -r post-deployment
 ```
 
 Done.

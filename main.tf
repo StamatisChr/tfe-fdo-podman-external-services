@@ -31,6 +31,7 @@ resource "aws_instance" "tfe_instance" {
     tfe_database_host              = aws_db_instance.tfe_postgres.endpoint
     aws_region                     = var.aws_region
     tfe_object_storage_bucket_name = aws_s3_bucket.tfe_bucket.id
+    my_public_ip                   = data.http.my_public_ip.response_body
   })
 
   ebs_optimized = true

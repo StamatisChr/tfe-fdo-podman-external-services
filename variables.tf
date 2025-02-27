@@ -83,3 +83,23 @@ variable "tfe_database_password" {
   description = "The database password of the database name in the RDS instance"
   type        = string
 }
+
+variable "org_name" {
+  type    = string
+  default = "myorg"
+}
+variable "workspace_name" {
+  type    = string
+  default = "myworkspace"
+}
+variable "admin_email" {
+  type    = string
+  default = "admin@example.com"
+}
+
+variable "admin_username" {
+  type    = string
+  default = "admin"
+
+}
+variable "admin_password" {}

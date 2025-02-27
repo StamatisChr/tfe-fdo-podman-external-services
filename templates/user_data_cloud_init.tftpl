@@ -19,6 +19,8 @@ write_files:
             value: "external"
           - name: "TFE_LICENSE"
             value: "${tfe_license}"
+          - name: "TFE_IACT_SUBNETS"
+            value: "${my_public_ip}/32"  
           - name: "TFE_HOSTNAME"
             value: "${tfe_hostname}"
           - name: "TFE_HTTP_PORT"

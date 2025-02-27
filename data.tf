@@ -26,3 +26,6 @@ data "aws_iam_policy" "SecurityComputeAccess" {
   name = "SecurityComputeAccess"
 }
 
+data "http" "my_public_ip" {
+  url = "https://api.ipify.org?format=text"
+}
