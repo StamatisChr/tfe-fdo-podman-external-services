@@ -3,6 +3,7 @@
 ## What is this guide about?
 
 This guide is to have Terraform Enterprise running with Podman on external mode.
+Following the steps you will create a virtual machine on AWS (EC2 instance) where the TFE application will be deployed. Also an S3 bucket is created to be used as external file storage, an RDS instance to be used as external database, and all the necessary security groups, IAM roles, DNS entries etc, to make Terraform Enterprise FDO podman to work with external services. 
 
 ## Prerequisites 
 
