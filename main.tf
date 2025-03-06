@@ -16,6 +16,7 @@ resource "aws_instance" "tfe_instance" {
 
   user_data = templatefile("./templates/user_data_cloud_init.tftpl", {
     tfe_host_path_to_certificates  = var.tfe_host_path_to_certificates
+    tfe_host_path_to_scripts       = var.tfe_host_path_to_scripts
     tfe_license                    = var.tfe_license
     tfe_version_image              = var.tfe_version_image
     tfe_hostname                   = "${var.tfe_dns_record}-${random_pet.hostname_suffix.id}.${var.hosted_zone_name}"
@@ -31,7 +32,11 @@ resource "aws_instance" "tfe_instance" {
     tfe_database_host              = aws_db_instance.tfe_postgres.endpoint
     aws_region                     = var.aws_region
     tfe_object_storage_bucket_name = aws_s3_bucket.tfe_bucket.id
-    my_public_ip                   = data.http.my_public_ip.response_body
+    org_name                       = var.org_name
+    workspace_name                 = var.workspace_name
+    admin_email                    = var.admin_email
+    admin_username                 = var.admin_username
+    admin_password                 = var.admin_password
   })
 
   ebs_optimized = true

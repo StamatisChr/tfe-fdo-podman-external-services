@@ -2,6 +2,7 @@
 package_update: true
 packages:
   - container-tools
+  - jq
 write_files:
   - path: /etc/containers/systemd/deployment.yml
     content: |
@@ -19,8 +20,6 @@ write_files:
             value: "external"
           - name: "TFE_LICENSE"
             value: "${tfe_license}"
-          - name: "TFE_IACT_SUBNETS"
-            value: "${my_public_ip}/32"  
           - name: "TFE_HOSTNAME"
             value: "${tfe_hostname}"
           - name: "TFE_HTTP_PORT"
@@ -111,6 +110,7 @@ write_files:
         - name: "terraform-enterprise_terraform-enterprise-cache-pvc"
           persistentVolumeClaim:
             claimName: "terraform-enterprise_terraform-enterprise-cache"
+# Quadlet unit file for the Terraform Enterprise pod and container:
   - path: /etc/containers/systemd/terraform-enterprise.kube
     content: |
       [Install]
@@ -119,19 +119,69 @@ write_files:
       Restart=always
       [Kube]
       Yaml=deployment.yml
+# The json file to create the first admin user:
+  - path: ${tfe_host_path_to_scripts}/payload.json
+    content: |
+      {
+      "username": "${admin_username}",
+      "email": "${admin_email}",
+      "password": "${admin_password}"
+      }
+# Terraform code to create resources in TFE (org and workspace)
+  - path: ${tfe_host_path_to_scripts}/tfe.tf
+    content: |
+      variable "admin_token" {}
+      provider "tfe" {
+        hostname = "${tfe_hostname}"
+        token    = var.admin_token
+      }
+
+      resource "tfe_organization" "my_org" {
+        name  = "${org_name}" 
+        email = "${admin_email}" 
+      } 
+
+      resource "tfe_workspace" "test" {
+        name         = "${workspace_name}"
+        organization = tfe_organization.my_org.name
+      }
+
 runcmd:
 #Install and start aws ssm agent
   - sudo dnf install -y https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm
   - sudo systemctl enable --now amazon-ssm-agent
   - systemctl enable --now podman.socket
+
+# Create directories
   - mkdir -p ${tfe_host_path_to_certificates}
+  - mkdir -p ${tfe_host_path_to_scripts}
+
 # Pull and run Certbot container to generate TLS certificates
   - podman pull docker.io/certbot/certbot:latest
-  - podman run --rm -it -p 80:80 -v "${tfe_host_path_to_certificates}:/etc/letsencrypt/archive/${tfe_hostname}:Z" certbot/certbot certonly --standalone --non-interactive --agree-tos --register-unsafely-without-email --preferred-challenges http -d "${tfe_hostname}"
+  - podman run --rm -p 80:80 -v "${tfe_host_path_to_certificates}:/etc/letsencrypt/archive/${tfe_hostname}:Z" certbot/certbot certonly --standalone --non-interactive --agree-tos --register-unsafely-without-email --preferred-challenges http -d "${tfe_hostname}"
+
 # Log in to Terraform Enterprise container image registry and pull the image
   - echo "${tfe_license}" | podman login --username terraform images.releases.hashicorp.com --password-stdin
   - podman pull images.releases.hashicorp.com/hashicorp/terraform-enterprise:${tfe_version_image}
+
 # Reload systemd daemon and start the Terraform Enterprise service
   - systemctl daemon-reload
   - sleep 15
   - systemctl start terraform-enterprise.service
+  - sleep 30
+
+# Wait TFE to start  
+  - while [ "$(curl -fsS https://${tfe_hostname}/_health_check)" != "OK" ]; do echo "$(date +"%Y-%m-%d %H:%M:%S") Waiting TFE to start..."; sleep 20; done  
+
+# Get admin token
+  - IACT_TOKEN=$(podman exec terraform-enterprise-terraform-enterprise tfectl admin token)
+
+# Create the first admin user and get his api token  
+  - |
+    ADMIN_API_TOKEN=$(curl --header "Content-Type: application/json" --request POST --data @${tfe_host_path_to_scripts}/payload.json "https://${tfe_hostname}/admin/initial-admin-user?token=$IACT_TOKEN"  | jq -r '.token' )
+
+# Pull terraform docker image
+  - podman pull docker.io/hashicorp/terraform:1.11
+# Run terraform with admin user api token to create resources in TFE (org and workspace)
+  - podman run --rm -e TF_VAR_admin_token=$${ADMIN_API_TOKEN} -v ${tfe_host_path_to_scripts}:/workspace:z -w /workspace hashicorp/terraform:1.11 init
+  - podman run --rm -e TF_VAR_admin_token=$${ADMIN_API_TOKEN} -v ${tfe_host_path_to_scripts}:/workspace:z -w /workspace hashicorp/terraform:1.11 apply -auto-approve  

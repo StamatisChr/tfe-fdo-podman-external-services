@@ -10,16 +10,18 @@ output "rhel9_ami_name" {
 
 output "tfe-podman-fqdn" {
   description = "tfe-fqdn"
-  value       = "${var.tfe_dns_record}-${random_pet.hostname_suffix.id}.${var.hosted_zone_name}"
+  value       = "https://${var.tfe_dns_record}-${random_pet.hostname_suffix.id}.${var.hosted_zone_name}"
 
 }
 
 output "aws_region" {
   value = var.aws_region
-
 }
 
 output "start_aws_ssm_session" {
   value = "aws ssm start-session --target ${aws_instance.tfe_instance.id} --region ${var.aws_region}"
 }
 
+output "tfe_version" {
+  value = var.tfe_version_image
+}

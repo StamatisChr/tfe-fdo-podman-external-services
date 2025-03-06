@@ -3,7 +3,8 @@
 ## What is this guide about?
 
 This guide is to have Terraform Enterprise running with Podman on external mode.
-Following the steps you will create a virtual machine on AWS (EC2 instance) where the TFE application will be deployed. Also an S3 bucket is created to be used as external file storage, an RDS instance to be used as external database, and all the necessary security groups, IAM roles, DNS entries etc, to make Terraform Enterprise FDO podman to work with external services. 
+Following the steps you will create a virtual machine on AWS (EC2 instance) where the TFE application will be deployed. Also an S3 bucket is created to be used as external file storage, an RDS instance to be used as external database, and all the necessary security groups, IAM roles, DNS entries etc, to make Terraform Enterprise FDO podman to work with external services.
+The scope of this guide is to be used as an example, it should not be used as is for production purposes.
 
 ## Prerequisites 
 
@@ -11,7 +12,7 @@ Following the steps you will create a virtual machine on AWS (EC2 instance) wher
 
 - AWS IAM user with permissions to use AWS EC2, RDS, S3, IAM and Route53 services
 
-- IAM Role/Policy that allows to start an AWS SSM session 
+- IAM Role/Policy that allows to start an AWS SSM session
 
 - [AWS cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [AWS SSM plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) installed and configured on your computer 
 
@@ -19,47 +20,51 @@ Following the steps you will create a virtual machine on AWS (EC2 instance) wher
 
 - Terraform Enterprise FDO license
 
-- Git installed and configured on your computer
+- Git installed on your computer
 
 - Terraform installed on your computer
 
 ## Create the AWS resources and start TFE
 
 Export your AWS access key and secret access key as environment variables:
-```
+
+```sh
 export AWS_ACCESS_KEY_ID=<your_access_key_id>
 ```
 
-```
+```sh
 export AWS_SECRET_ACCESS_KEY=<your_secret_key>
 ```
-
 
 Clone the repository to your computer.
 
 Open your cli and run:
-```
+
+```sh
 git clone git@github.com:StamatisChr/tfe-fdo-podman-external-services.git
 ```
 
-
 When the repository cloning is finished, change directory to the repo’s terraform directory:
-```
+
+```sh
 cd tfe-fdo-podman-external-services
 ```
 
 Here you need to create a `variables.auto.tfvars` file with your specifications. Use the example tfvars file.
 
 Rename the example file:
-```
+
+```sh
 cp variables.auto.tfvars.example variables.auto.tfvars
-```
+
+```sh
 Edit the file:
-```
+
+```sh
 vim variables.auto.tfvars
 ```
 
-```
+```sh
 # example tfvars file
 # do not change the variable names on the left column
 # replace only the values in the "< >" placeholders
@@ -75,35 +80,40 @@ tfe_version_image             = "<tfe_version>"            # desired TFE version
 tfe_database_user             = "<type_a_username>"        # TFE database user for the external database
 tfe_database_name             = "<type_a_database_name>"   # The database name that TFE will use
 tfe_database_password         = "<type_a_password>"        # The password for the external TFE database
-admin_password                = "<type_a_passwor>          # The password of the TFE Admin user
+admin_password                = "<type_a_password>"        # The password of the TFE Admin user
 ```
-
 
 Populate the file according to the file comments and save.
 
 Initialize terraform, run:
-```
+
+```sh
 terraform init
 ```
 
 Create the resources with terraform, run:
-```
+
+```sh
 terraform apply
 ```
+
 review the terraform plan.
 
 Type yes when prompted with:
-```
+
+```sh
 Do you want to perform these actions?
   Terraform will perform the actions described above.
   Only 'yes' will be accepted to approve.
 
   Enter a value: 
 ```
+
 Wait until you see the apply completed message and the output values. 
 
 Example:
-```
+
+```sh
 Apply complete! Resources: 18 added, 0 changed, 0 destroyed.
 
 Outputs:
@@ -115,69 +125,25 @@ start_ssm_session = "aws ssm start-session --target instance-id i-09254c251eb439
 tfe-podman-fqdn = "tfe-ext-eel.stamatios-chrysinas.sbx.hashidemos.io"
 ```
 
-go to the new post-deployment directory
-```
-cd post-deployment
-```
+Wait about 7-8 minutes for Terraform Enterprise to initialize.
 
-run the script that will create your first user, organization and workspace:
-```
-bash setup_tfe.sh
-```
-
-example output:
-```
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-Waiting TFE to start...
-TFE is ready to accept connections
-Retrieving initial admin user token
-Initial admin user token retrieved
-7f8d88f8ee9211d62f8fc9e165d05cdxxxxxxxxxxx
-Creating admin user..
-Admin user created
-Received admin user api token: 
-z9WKiNUJs7C69A.atlasv1.7UAYywlOvrrzwzgGysDblQ0Z9n1pgxxxxxxxxxx
-Creating resources...
-visit tfe ui:
-https://tfe-ext-dinosaur.stamatios-chrysinas.sbx.hashidemos.io
-User credentials can be found in payload.json file
-```
-
-Visit TFE fqdn (mentioned in the script output).
-
-Login credentials can be found in the payload.json:
-```
-cat payload.json
-```
-
+Visit the tfe-podman-fqdn from the output.
+To log in, use `admin` as username and the password you set for `admin_password` as password
 
 ## Clean up
 
-Go one direectory back from post-deployment:
-```
-cd ..
-```
-
 To delete all the resources, run:
-```
+
+```sh
 terraform destroy
 ```
+
 type yes when prompted.
 
 Wait for the resource deletion.
-```
-Destroy complete! Resources: 21 destroyed.
-```
 
-Remove the post-deployment directory:
-```
-rm -r post-deployment
+```sh
+Destroy complete! Resources: 18 destroyed.
 ```
 
 Done.
