@@ -53,7 +53,7 @@ variable "tfe_version_image" {
 variable "tfe_host_path_to_certificates" {
   description = "The path on the host machine to store the certificate files"
   type        = string
-  default     = "/etc/terraform-enterprise/certs"
+  default     = "/var/lib/terraform-enterpise/certs"
 }
 
 variable "lets_encrypt_cert" {

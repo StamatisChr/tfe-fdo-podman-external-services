@@ -86,7 +86,7 @@ write_files:
             name: "run"
           - mountPath: "/tmp"
             name: "tmp"
-          - mountPath: "/run/docker.sock"
+          - mountPath: "/run/podman/podman.sock"
             name: "docker-sock"
           - mountPath: "/var/cache/tfe-task-worker/terraform"
             name: "terraform-enterprise_terraform-enterprise-cache-pvc"
@@ -105,7 +105,7 @@ write_files:
             medium: "Memory"
           name: "tmp"
         - hostPath:
-            path: "/var/run/docker.sock"
+            path: "/run/podman/podman.sock"
             type: "File"
           name: "docker-sock"
         - name: "terraform-enterprise_terraform-enterprise-cache-pvc"
